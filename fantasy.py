@@ -4,14 +4,38 @@ import matplotlib.pyplot as plt
 
 dataset = pd.read_csv('archive-2/yearly_player_stats_offense.csv')
 
+# -------- DATA FILTERS -------------------------------------------------------
+
 # Filter by position
 position = 'te'
 dataset['position'] = dataset['position'].astype(str).str.strip().str.lower()
 dataset = dataset[dataset['position'] == position]
 
 # Filtering by age
-age = 30
-dataset = dataset[dataset['age'] >= age]
+# age = 23
+# dataset = dataset[dataset['age'] >= age]
+
+# Filtering by seasons played
+# seasons_played = 0
+# dataset = dataset[dataset['seasons_played'] >= seasons_played]
+
+# Filtering by targets
+# targets = 20
+# dataset = dataset[dataset['targets'] >= targets]
+
+# Filtering by receiving yards
+# yards = 1000
+# dataset = dataset[dataset['receiving_yards'] >= yards]
+
+# Filtering by rushing attempts
+# attempts = 200
+# dataset = dataset[dataset['rush_attempts'] >= attempts]
+
+# Filter by fantasy points
+# points = 200
+# dataset = dataset[dataset['fantasy_points_ppr'] >= points]
+
+# -------------------------------------------------------------------
 
 dataset['player_name'] = dataset['player_name'].astype(str).str.strip().str.lower()
 dataset['season'] = dataset['season'].astype(int)
@@ -22,26 +46,34 @@ data = dataset[
         # Identifiers
         'player_name',
         'season',
+        'draft_ovr',
 
         # Demographics
         'age',
 
-        # Availability
-        'games_missed',
-
         # Workload / Opportunity
-        'touches',
         'rush_attempts',
         'targets',
+        'receptions',
         'career_touches',
         'offense_snaps',
+        'games_played_career',
+        'games_played_season',
 
         # Performance
         'fantasy_points_ppr',
-        'total_yards',
+        'receiving_yards',
+        'yards_after_catch',
+        'rushing_yards',
         'total_tds',
+        'career_fantasy_points_ppr'
     ]
-]
+].copy()
+
+# Calculating ppg stats
+data.loc[:, 'career_ppg'] = data['career_fantasy_points_ppr'] / data['games_played_career']
+data.loc[:, 'season_ppg'] = data['fantasy_points_ppr'] / data['games_played_season']
+
 # Sort the dataset to prepare for shifting
 data = data.sort_values(by=['player_name', 'season'])
 
@@ -50,26 +82,32 @@ data['next_year_points'] = data.groupby('player_name')['fantasy_points_ppr'].shi
 
 # Drop rows where next year's data is missing
 data = data.dropna()
+data = data[(data['games_played_career'] > 0) & (data['games_played_season'] > 0)]
+
 
 # Features and dependent variable
 X = data[[
     # Demographics
     'age',
-
-    # Availability
-    'games_missed',
+    # 'draft_ovr',
 
     # Workload / Opportunity
-    'touches',
     'rush_attempts',
     'targets',
+    'receptions',
     'career_touches',
-    'offense_snaps',
+    # 'offense_snaps',
+    'games_played_career',
+    'games_played_season',
 
     # Performance
     'fantasy_points_ppr',
-    'total_yards',
+    'receiving_yards',
+    # 'yards_after_catch',
+    'rushing_yards',
     'total_tds',
+    # 'career_ppg',
+    'season_ppg'
 ]].values
 
 y = data['next_year_points'].values
@@ -77,7 +115,7 @@ y = data['next_year_points'].values
 # Splitting the data
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=0)
 
 # Building Linear Regression Model
 from sklearn.linear_model import LinearRegression
