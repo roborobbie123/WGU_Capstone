@@ -7,31 +7,34 @@ dataset = pd.read_csv('archive-2/yearly_player_stats_offense.csv')
 # -------- DATA FILTERS -------------------------------------------------------
 
 # Filter by position
-position = 'te'
+position = 'rb'
 dataset['position'] = dataset['position'].astype(str).str.strip().str.lower()
 dataset = dataset[dataset['position'] == position]
 
+# Excludes rookies
+dataset = dataset[(dataset['games_played_career'] > 0)]
+
 # Filtering by age
-# age = 23
+# age = 26
 # dataset = dataset[dataset['age'] >= age]
 
 # Filtering by seasons played
-# seasons_played = 5
+# seasons_played = 6
 # dataset = dataset[dataset['seasons_played'] >= seasons_played]
 
-# Filtering by targets
-# targets = 20
+# Filtering by previous season targets
+# targets = 40
 # dataset = dataset[dataset['targets'] >= targets]
 
-# Filtering by receiving yards
+# Filtering by previous season receiving yards
 # yards = 1000
 # dataset = dataset[dataset['receiving_yards'] >= yards]
 
-# Filtering by rushing attempts
-# attempts = 200
+# Filtering by previous season rushing attempts
+# attempts = 300
 # dataset = dataset[dataset['rush_attempts'] >= attempts]
 
-# Filter by fantasy points
+# Filter by previous season fantasy points
 # points = 200
 # dataset = dataset[dataset['fantasy_points_ppr'] >= points]
 
@@ -56,9 +59,17 @@ data = dataset[
         'targets',
         'receptions',
         'career_touches',
+        'offense_pct',
         'offense_snaps',
         'games_played_career',
         'games_played_season',
+
+        # Efficiency
+        'tackled_for_loss',
+        'first_down_rush',
+        'third_down_converted',
+        'third_down_failed',
+        'season_average_ypc',
 
         # Performance
         'fantasy_points_ppr',
@@ -66,13 +77,15 @@ data = dataset[
         'yards_after_catch',
         'rushing_yards',
         'total_tds',
-        'career_fantasy_points_ppr'
+        'career_fantasy_points_ppr',
     ]
 ].copy()
 
 # Calculating ppg stats
 data.loc[:, 'career_ppg'] = data['career_fantasy_points_ppr'] / data['games_played_career']
 data.loc[:, 'season_ppg'] = data['fantasy_points_ppr'] / data['games_played_season']
+data['catch_pct'] = data['receptions'] / data['targets']
+data['yards_per_reception'] = data['receiving_yards'] / data['receptions']
 
 # Sort the dataset to prepare for shifting
 data = data.sort_values(by=['player_name', 'season'])
@@ -84,31 +97,66 @@ data['next_year_points'] = data.groupby('player_name')['fantasy_points_ppr'].shi
 data = data.dropna()
 data = data[(data['games_played_career'] > 0) & (data['games_played_season'] > 0)]
 
-# Features and dependent variable
-X = data[[
-    # Demographics
+# Splitting features by position
+rb_features = [
     'age',
-    # 'draft_ovr',
-
-    # Workload / Opportunity
-    'rush_attempts',
-    'targets',
-    'receptions',
     'career_touches',
-    # 'offense_snaps',
     'games_played_career',
     'games_played_season',
-
-    # Performance
-    'fantasy_points_ppr',
-    'receiving_yards',
-    # 'yards_after_catch',
+    'rush_attempts',
     'rushing_yards',
+    'targets',
+    'receptions',
+    'receiving_yards',
     'total_tds',
-    # 'career_ppg',
-    'season_ppg'
-]].values
+    'offense_pct',
+    'season_ppg',
+    'fantasy_points_ppr',
+]
+wr_features = [
+    'age',
+    'draft_ovr',
+    'career_touches',
+    'games_played_career',
+    'games_played_season',
+    'targets',
+    'receptions',
+    'receiving_yards',
+    'yards_after_catch',
+    'total_tds',
+    'catch_pct',
+    'yards_per_reception',
+    'offense_snaps',
+    'offense_pct',
+    'season_ppg',
+    'fantasy_points_ppr',
+]
+te_features = [
+    'age',
+    'career_touches',
+    'games_played_career',
+    'games_played_season',
+    'targets',
+    'receptions',
+    'receiving_yards',
+    'total_tds',
+    'yards_per_reception',
+    'yards_after_catch',
+    'offense_pct',
+    'season_ppg',
+    'fantasy_points_ppr', ]
 
+if position == 'rb':
+    features = rb_features
+elif position == 'wr':
+    features = wr_features
+elif position == 'te':
+    features = te_features
+else:
+    raise ValueError("Position must be rb, wr, or te")
+
+# Features and dependent variable
+X = data[features].values
 y = data['next_year_points'].values
 
 # Splitting the data
@@ -221,4 +269,9 @@ plt.title(f"R² Comparison of Regression Models for {position.upper()}'s")
 plt.ylim(0, 1)
 plt.xticks(rotation=15)
 plt.tight_layout()
-plt.show()
+# plt.show()
+
+# Selecting the most accurate model based on R² values
+optimal_model_index = r2_scores.index(max(r2_scores))
+optimal_model = model_names[optimal_model_index]
+print(f"\nOptimal Model: {optimal_model}; R²: {max(r2_scores)}")
