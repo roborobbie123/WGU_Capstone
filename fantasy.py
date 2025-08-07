@@ -7,7 +7,7 @@ dataset = pd.read_csv('archive-2/yearly_player_stats_offense.csv')
 # -------- DATA FILTERS -------------------------------------------------------
 
 # Filter by position
-position = 'wr'
+position = 'te'
 dataset['position'] = dataset['position'].astype(str).str.strip().str.lower()
 dataset = dataset[dataset['position'] == position]
 
@@ -16,8 +16,8 @@ dataset = dataset[dataset['position'] == position]
 # dataset = dataset[dataset['age'] >= age]
 
 # Filtering by seasons played
-seasons_played = 5
-dataset = dataset[dataset['seasons_played'] >= seasons_played]
+# seasons_played = 5
+# dataset = dataset[dataset['seasons_played'] >= seasons_played]
 
 # Filtering by targets
 # targets = 20
@@ -136,6 +136,13 @@ lr2 = LinearRegression()
 lr2.fit(X_train_poly, y_train)
 pr_pred = lr2.predict(X_test_poly)
 
+# Building Decision Tree Model
+from sklearn.tree import DecisionTreeRegressor
+
+dt = DecisionTreeRegressor(max_depth=5, random_state=0)
+dt.fit(X_train, y_train)
+dt_pred = dt.predict(X_test)
+
 # Building Random Forest Model
 from sklearn.ensemble import RandomForestRegressor
 
@@ -149,7 +156,7 @@ from sklearn.preprocessing import StandardScaler
 scaler_X = StandardScaler()
 scaler_y = StandardScaler()
 X_trained_scaled = scaler_X.fit_transform(X_train)
-X_test_scaled = scaler_X.fit_transform(X_test)
+X_test_scaled = scaler_X.transform(X_test)
 y_trained_scaled = scaler_y.fit_transform(y_train.reshape(-1, 1)).ravel()
 
 from sklearn.svm import SVR
@@ -178,10 +185,18 @@ print("Mean Squared Error:", pr_mse)
 print("Mean Absolute Error:", pr_mae)
 print("R² Score:", pr_r2)
 
+dt_mse = mean_squared_error(y_test, dt_pred)
+dt_mae = mean_absolute_error(y_test, dt_pred)
+dt_r2 = r2_score(y_test, dt_pred)
+print("\n---Decision Tree Regression---")
+print("Mean Squared Error:", dt_mse)
+print("Mean Absolute Error:", dt_mae)
+print("R² Score:", dt_r2)
+
 rf_mse = mean_squared_error(y_test, rf_pred)
 rf_mae = mean_absolute_error(y_test, rf_pred)
 rf_r2 = r2_score(y_test, rf_pred)
-print("\n---Random Forest---")
+print("\n---Random Forest Regression---")
 print("Mean Squared Error:", rf_mse)
 print("Mean Absolute Error:", rf_mae)
 print("R² Score:", rf_r2)
@@ -193,3 +208,17 @@ print("\n---SVR---")
 print("Mean Squared Error:", svr_mse)
 print("Mean Absolute Error:", svr_mae)
 print("R² Score:", svr_r2)
+
+# Visualizing model metrics
+model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
+               'SVR']
+r2_scores = [lr_r2, pr_r2, dt_r2, rf_r2, svr_r2]
+
+plt.figure(figsize=(8, 5))
+plt.bar(model_names, r2_scores)
+plt.ylabel('R² Score')
+plt.title(f"R² Comparison of Regression Models for {position.upper()}'s")
+plt.ylim(0, 1)
+plt.xticks(rotation=15)
+plt.tight_layout()
+plt.show()
