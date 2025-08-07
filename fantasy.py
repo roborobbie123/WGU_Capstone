@@ -3,11 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 dataset = pd.read_csv('archive-2/yearly_player_stats_offense.csv')
+yearly_team_stats = pd.read_csv('archive-2/yearly_team_stats_offense.csv')
+yearly_team_stats = yearly_team_stats.rename(columns={'rush_attempts': 'total_rushes'})
+yearly_team_stats = yearly_team_stats.rename(columns={'pass_attempts': 'team_passes'})
+
+# Adding team total passes and rushes to data
+added_columns = yearly_team_stats[['team', 'season', 'team_passes', 'total_rushes']]
+dataset = pd.merge(dataset, added_columns, on=['team', 'season'], how='left')
 
 # -------- DATA FILTERS -------------------------------------------------------
 
 # Filter by position
-position = 'rb'
+position = 'wr'
 dataset['position'] = dataset['position'].astype(str).str.strip().str.lower()
 dataset = dataset[dataset['position'] == position]
 
@@ -42,6 +49,8 @@ dataset = dataset[(dataset['games_played_career'] > 0)]
 
 dataset['player_name'] = dataset['player_name'].astype(str).str.strip().str.lower()
 dataset['season'] = dataset['season'].astype(int)
+dataset['target_share'] = dataset['targets'] / dataset['team_passes']
+dataset['rush_share'] = dataset['rush_attempts'] / dataset['total_rushes']
 
 # New dataset with only relevant data
 data = dataset[
@@ -58,6 +67,8 @@ data = dataset[
         'rush_attempts',
         'targets',
         'receptions',
+        'target_share',
+        'rush_share',
         'career_touches',
         'offense_pct',
         'offense_snaps',
@@ -109,6 +120,8 @@ rb_features = [
     'receptions',
     'receiving_yards',
     'total_tds',
+    'target_share',
+    'rush_share',
     'offense_pct',
     'season_ppg',
     'fantasy_points_ppr',
@@ -126,6 +139,8 @@ wr_features = [
     'total_tds',
     'catch_pct',
     'yards_per_reception',
+    'target_share',
+    'rush_share',
     'offense_snaps',
     'offense_pct',
     'season_ppg',
@@ -142,6 +157,8 @@ te_features = [
     'total_tds',
     'yards_per_reception',
     'yards_after_catch',
+    'target_share',
+    'rush_share',
     'offense_pct',
     'season_ppg',
     'fantasy_points_ppr', ]
@@ -269,7 +286,7 @@ plt.title(f"R² Comparison of Regression Models for {position.upper()}'s")
 plt.ylim(0, 1)
 plt.xticks(rotation=15)
 plt.tight_layout()
-# plt.show()
+plt.show()
 
 # Selecting the most accurate model based on R² values
 optimal_model_index = r2_scores.index(max(r2_scores))
