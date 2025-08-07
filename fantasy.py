@@ -125,6 +125,17 @@ lr = LinearRegression()
 lr.fit(X_train, y_train)
 y_pred = lr.predict(X_test)
 
+# Building Polynomial Regression Model
+
+from sklearn.preprocessing import PolynomialFeatures
+
+pr = PolynomialFeatures(degree=2)
+X_train_poly = pr.fit_transform(X_train)
+X_test_poly = pr.transform(X_test)
+lr2 = LinearRegression()
+lr2.fit(X_train_poly, y_train)
+pr_pred = lr2.predict(X_test_poly)
+
 # Building Random Forest Model
 from sklearn.ensemble import RandomForestRegressor
 
@@ -133,8 +144,8 @@ rf.fit(X_train, y_train)
 rf_pred = rf.predict(X_test)
 
 # Building SVR Model
-
 from sklearn.preprocessing import StandardScaler
+
 scaler_X = StandardScaler()
 scaler_y = StandardScaler()
 X_trained_scaled = scaler_X.fit_transform(X_train)
@@ -142,11 +153,11 @@ X_test_scaled = scaler_X.fit_transform(X_test)
 y_trained_scaled = scaler_y.fit_transform(y_train.reshape(-1, 1)).ravel()
 
 from sklearn.svm import SVR
-svr = SVR(kernel = 'rbf')
+
+svr = SVR(kernel='rbf')
 svr.fit(X_trained_scaled, y_trained_scaled)
 svr_pred_scaled = svr.predict(X_test_scaled)
 svr_pred = scaler_y.inverse_transform(svr_pred_scaled.reshape(-1, 1))
-
 
 # PERFORMANCE METRICS
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
@@ -158,6 +169,14 @@ print("\n---Linear Regression---")
 print("Mean Squared Error:", lr_mse)
 print("Mean Absolute Error:", lr_mae)
 print("R² Score:", lr_r2)
+
+pr_mse = mean_squared_error(y_test, pr_pred)
+pr_mae = mean_absolute_error(y_test, pr_pred)
+pr_r2 = r2_score(y_test, pr_pred)
+print("\n---Polynomial Regression---")
+print("Mean Squared Error:", pr_mse)
+print("Mean Absolute Error:", pr_mae)
+print("R² Score:", pr_r2)
 
 rf_mse = mean_squared_error(y_test, rf_pred)
 rf_mae = mean_absolute_error(y_test, rf_pred)
@@ -174,5 +193,3 @@ print("\n---SVR---")
 print("Mean Squared Error:", svr_mse)
 print("Mean Absolute Error:", svr_mae)
 print("R² Score:", svr_r2)
-
-
