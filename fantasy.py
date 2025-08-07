@@ -21,9 +21,15 @@ added_columns = yearly_team_stats[['team', 'season', 'team_passes', 'total_rushe
 dataset = pd.merge(dataset, added_columns, on=['team', 'season'], how='left')
 
 # -------- DATA FILTERS -------------------------------------------------------
+positions = ['rb', 'wr', 'te']
+while True:
+    position = input('Select a position (RB, WR, or TE): ').lower()
+    if position in positions:
+        break
+    else:
+        print('Invalid position')
 
 # Filter by position
-position = 'rb'
 dataset['position'] = dataset['position'].astype(str).str.strip().str.lower()
 dataset = dataset[dataset['position'] == position]
 
@@ -36,7 +42,7 @@ dataset['season'] = dataset['season'].astype(int)
 dataset['target_share'] = dataset['targets'] / dataset['team_passes']
 dataset['rush_share'] = dataset['rush_attempts'] / dataset['total_rushes']
 dataset['points'] = (dataset['rushing_yards'] * 0.1) + (dataset['receiving_yards'] * 0.1) + dataset['receptions'] + (
-            dataset['rush_touchdown'] * 6) + (dataset['receiving_touchdown'] * 6)
+        dataset['rush_touchdown'] * 6) + (dataset['receiving_touchdown'] * 6)
 
 # New dataset with only relevant data
 data = dataset[
@@ -166,7 +172,7 @@ else:
 
 # Features and dependent variable
 X = data[features].values
-y = data['points'].values
+y = data['next_year_points'].values
 
 # Splitting the data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
@@ -262,7 +268,7 @@ plt.title(f"R² Comparison of Regression Models for {position.upper()}'s")
 plt.ylim(0, 1)
 plt.xticks(rotation=15)
 plt.tight_layout()
-# plt.show()
+plt.show()
 
 # Selecting the most accurate model based on R² values
 optimal_model_index = r2_scores.index(max(r2_scores))
@@ -302,15 +308,29 @@ def predict_from_partial_input(user_input: dict, model_name='Random Forest Regre
         raise ValueError("Invalid model name")
 
 
+print('--- Player statistics ---')
+while True:
+    try:
+        games_played = int(input('Games played: '))
+        points = int(input('PPR points: '))
+        targets = int(input('Targets: '))
+        receiving_yards = int(input('Receiving yards: '))
+        if position == 'rb':
+            rushing_yards = int(input('Rushing yards: '))
+        seasons = int(input('Total seasons played: '))
+        break
+    except ValueError:
+        print('Invalid input')
+
 user_input = {
-    'games_played_season': 17,
-    'fantasy_points_ppr': 209.3,
-    'targets': 132,
-    'receiving_yards': 1002,
-    'seasons_played': 5
+    'games_played_season': games_played,
+    'points': points,
+    'targets': targets,
+    'receiving_yards': receiving_yards,
+    'seasons_played': seasons
 }
+if position == 'rb':
+    user_input['rushing_yards'] = rushing_yards
+
 output = predict_from_partial_input(user_input, optimal_model)
 print(f"Predicted PPR Points: {output}")
-
-
-
