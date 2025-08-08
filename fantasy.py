@@ -16,6 +16,8 @@ yearly_team_stats = pd.read_csv('archive-2/yearly_team_stats_offense.csv')
 yearly_team_stats = yearly_team_stats.rename(columns={'rush_attempts': 'total_rushes'})
 yearly_team_stats = yearly_team_stats.rename(columns={'pass_attempts': 'team_passes'})
 
+dataset['position'] = dataset['position'].astype(str).str.strip().str.lower()
+
 # Adding team total passes and rushes to data
 added_columns = yearly_team_stats[['team', 'season', 'team_passes', 'total_rushes']]
 dataset = pd.merge(dataset, added_columns, on=['team', 'season'], how='left')
@@ -29,23 +31,38 @@ while True:
     else:
         print('Invalid position')
 
-# Filter by position
-dataset['position'] = dataset['position'].astype(str).str.strip().str.lower()
-dataset = dataset[dataset['position'] == position]
+# Plotting descriptive method of average points per position per season
+filtered = dataset[dataset['position'].isin(positions)]
+avg_ppr_points = filtered.groupby('position')['fantasy_points_ppr'].mean()
+plt.figure(figsize=(8,5))
+avg_ppr_points.plot(kind='bar', color=['blue', 'orange', 'green'])
+plt.title('Average PPR Points per Position')
+plt.xlabel('Position')
+plt.ylabel('Average PPR Points')
+plt.xticks(rotation=0)
+plt.show()
 
-# Excludes rookies
-dataset = dataset[(dataset['games_played_career'] > 0)]
-# -------------------------------------------------------------------
+# Excludes rookies and filters position
+dataset_filtered = dataset.copy()
+dataset_filtered = dataset_filtered[dataset_filtered['position'] == position]
 
-dataset['player_name'] = dataset['player_name'].astype(str).str.strip().str.lower()
-dataset['season'] = dataset['season'].astype(int)
-dataset['target_share'] = dataset['targets'] / dataset['team_passes']
-dataset['rush_share'] = dataset['rush_attempts'] / dataset['total_rushes']
-dataset['points'] = (dataset['rushing_yards'] * 0.1) + (dataset['receiving_yards'] * 0.1) + dataset['receptions'] + (
-        dataset['rush_touchdown'] * 6) + (dataset['receiving_touchdown'] * 6)
+# Filter and transform the copied dataset for all non-rookies
+dataset_filtered = dataset_filtered[(dataset_filtered['games_played_career'] > 0)]
+
+dataset_filtered['player_name'] = dataset_filtered['player_name'].astype(str).str.strip().str.lower()
+dataset_filtered['season'] = dataset_filtered['season'].astype(int)
+dataset_filtered['target_share'] = dataset_filtered['targets'] / dataset_filtered['team_passes']
+dataset_filtered['rush_share'] = dataset_filtered['rush_attempts'] / dataset_filtered['total_rushes']
+dataset_filtered['points'] = (
+        dataset_filtered['rushing_yards'] * 0.1
+        + dataset_filtered['receiving_yards'] * 0.1
+        + dataset_filtered['receptions']
+        + dataset_filtered['rush_touchdown'] * 6
+        + dataset_filtered['receiving_touchdown'] * 6
+)
 
 # New dataset with only relevant data
-data = dataset[
+data = dataset_filtered[
     [
         # Identifiers
         'player_name',
@@ -198,7 +215,7 @@ dt.fit(X_train, y_train)
 dt_pred = dt.predict(X_test)
 
 # Building Random Forest Model
-rf = RandomForestRegressor(n_estimators=100, random_state=0)
+rf = RandomForestRegressor(n_estimators=10, random_state=0)
 rf.fit(X_train, y_train)
 rf_pred = rf.predict(X_test)
 
@@ -280,7 +297,7 @@ default_input = pd.DataFrame(X_train, columns=features).mean().to_dict()
 
 
 # Making prediction based on optimal model
-def predict_from_partial_input(user_input: dict, model_name='Random Forest Regression'):
+def predict_input(user_input: dict, model_name='Random Forest Regression'):
     # Start from default
     input_data = default_input.copy()
 
@@ -308,7 +325,7 @@ def predict_from_partial_input(user_input: dict, model_name='Random Forest Regre
         raise ValueError("Invalid model name")
 
 
-print('--- Player statistics ---')
+print('--- Enter player statistics from last season ---')
 while True:
     try:
         games_played = int(input('Games played: '))
@@ -332,5 +349,7 @@ user_input = {
 if position == 'rb':
     user_input['rushing_yards'] = rushing_yards
 
-output = predict_from_partial_input(user_input, optimal_model)
-print(f"Predicted PPR Points: {output}")
+output = predict_input(user_input, optimal_model)
+print(f"Expected PPR Points: {round(output, 2)}")
+
+
