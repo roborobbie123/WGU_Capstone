@@ -47,16 +47,20 @@ def get_performance(y_test, pred):
     mse = mean_squared_error(y_test, pred)
     mae = mean_absolute_error(y_test, pred)
     r2 = r2_score(y_test, pred)
-    print("\n---Linear Regression---")
-    print("Mean Squared Error:", mse)
-    print("Mean Absolute Error:", mae)
-    print("R² Score:", r2)
 
     return mse, mae, r2
 
-def predict_input(user_input, model_name, results, features):
+
+def predict_input(user_input, model_name, results, features, X_train):
+
+    default_input = pd.DataFrame(X_train, columns=features).mean().to_dict()
+    input_data = default_input.copy()
+
+    # Update with user inputs to overwrite defaults
+    input_data.update(user_input)
+
     _, _, model_obj = results[model_name]
-    input_df = pd.DataFrame([user_input])[features]
+    input_df = pd.DataFrame([input_data])[features]
 
     if model_name == 'Linear Regression':
         return model_obj.predict(input_df)[0]
@@ -73,3 +77,10 @@ def predict_input(user_input, model_name, results, features):
         return scaler_y.inverse_transform(pred_scaled.reshape(-1, 1))[0][0]
     else:
         raise ValueError("Invalid model name")
+
+
+def optimal_model_r2(scores):
+    model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
+                   'SVR']
+    optimal_model_index = scores.index(max(scores))
+    return model_names[optimal_model_index]

@@ -18,13 +18,14 @@ def load_and_preprocess_data(player_file, team_file):
 
 def filter_dataset(dataset, position):
     dataset_filtered = dataset.copy()
-    dataset_filtered = dataset_filtered[dataset_filtered['position'] == position]
-    dataset_filtered = dataset_filtered[(dataset_filtered['games_played_career'] > 0)]
-    dataset_filtered['player_name'] = dataset_filtered['player_name'].astype(str).str.strip().str.lower()
-    dataset_filtered['season'] = dataset_filtered['season'].astype(int)
-    dataset_filtered['target_share'] = dataset_filtered['targets'] / dataset_filtered['team_passes']
-    dataset_filtered['rush_share'] = dataset_filtered['rush_attempts'] / dataset_filtered['total_rushes']
-    dataset_filtered['points'] = (
+    dataset_filtered = dataset_filtered[dataset_filtered['position'] == position].copy()
+    dataset_filtered = dataset_filtered[dataset_filtered['games_played_career'] > 0].copy()
+
+    dataset_filtered.loc[:, 'player_name'] = dataset_filtered['player_name'].astype(str).str.strip().str.lower()
+    dataset_filtered.loc[:, 'season'] = dataset_filtered['season'].astype(int)
+    dataset_filtered.loc[:, 'target_share'] = dataset_filtered['targets'] / dataset_filtered['team_passes']
+    dataset_filtered.loc[:, 'rush_share'] = dataset_filtered['rush_attempts'] / dataset_filtered['total_rushes']
+    dataset_filtered.loc[:, 'points'] = (
             dataset_filtered['rushing_yards'] * 0.1
             + dataset_filtered['receiving_yards'] * 0.1
             + dataset_filtered['receptions']
@@ -34,57 +35,21 @@ def filter_dataset(dataset, position):
 
     data = dataset_filtered[
         [
-            # Identifiers
-            'player_name',
-            'season',
-            'draft_ovr',
-
-            # Demographics
-            'age',
-
-            # Workload / Opportunity
-            'rush_attempts',
-            'targets',
-            'receptions',
-            'target_share',
-            'rush_share',
-            'career_touches',
-            'offense_pct',
-            'offense_snaps',
-            'games_played_career',
-            'games_played_season',
-            'touches',
-            'seasons_played',
-
-            # Efficiency
-            'tackled_for_loss',
-            'first_down_rush',
-            'third_down_converted',
-            'third_down_failed',
-            'season_average_ypc',
-
-            # Performance
-            'points',
-            'receiving_yards',
-            'yards_after_catch',
-            'rushing_yards',
-            'rush_touchdown',
-            'receiving_touchdown'
+            'player_name', 'season', 'draft_ovr', 'age', 'rush_attempts', 'targets',
+            'receptions', 'target_share', 'rush_share', 'career_touches', 'offense_pct',
+            'offense_snaps', 'games_played_career', 'games_played_season', 'touches',
+            'seasons_played', 'tackled_for_loss', 'first_down_rush', 'third_down_converted',
+            'third_down_failed', 'season_average_ypc', 'points', 'receiving_yards',
+            'yards_after_catch', 'rushing_yards', 'rush_touchdown', 'receiving_touchdown'
         ]
-    ]
+    ].copy()
 
-    # Calculating ppg stats
     data.loc[:, 'season_ppg'] = data['points'] / data['games_played_season']
-    data['catch_pct'] = data['receptions'] / data['targets']
-    data['yards_per_reception'] = data['receiving_yards'] / data['receptions']
+    data.loc[:, 'catch_pct'] = data['receptions'] / data['targets']
+    data.loc[:, 'yards_per_reception'] = data['receiving_yards'] / data['receptions']
 
-    # Sort the dataset to prepare for shifting
     data = data.sort_values(by=['player_name', 'season'])
-
-    # Group by player and shift fantasy points to next year
-    data['next_year_points'] = data.groupby('player_name')['points'].shift(-1)
-
-    # Drop rows where next year's data is missing
+    data.loc[:, 'next_year_points'] = data.groupby('player_name')['points'].shift(-1)
     data = data.dropna()
     data = data[(data['games_played_career'] > 0) & (data['games_played_season'] > 0)]
 

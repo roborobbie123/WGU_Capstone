@@ -1,22 +1,17 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import data_processing
 import features
 import models
 import visualization
 
-# Data preprocessing
+# DATA PREPROCESSING
 dataset = data_processing.load_and_preprocess_data('archive-2/yearly_player_stats_offense.csv',
                                                    'archive-2/yearly_team_stats_offense.csv')
 
 position = data_processing.get_position()
 data = data_processing.filter_dataset(dataset, position)
 
-# Splitting features by position
+# Getting features by position
 if position == 'rb':
     features = features.get_features_by_position('rb')
 elif position == 'wr':
@@ -26,16 +21,14 @@ elif position == 'te':
 else:
     raise ValueError("Position must be rb, wr, or te")
 
-# Features and dependent variable
+# FEATURES AND DEPENDENT VARIABLE
 X = data[features].values
 y = data['next_year_points'].values
 
-# Splitting the data
+# SPLITTING THE DATA
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
 # BUILDING THE MODELS
-
-# Building Linear Regression Model
 results = models.train_and_evaluate_models(X_train, X_test, y_train, y_test)
 
 lr = results['Linear Regression']
@@ -63,42 +56,20 @@ svr_model = svr[2][2]
 svr_pred = svr[1]
 svr_mse, svr_mae, svr_r2 = models.get_performance(y_test, svr_pred)
 
-# Visualizing model metrics
-model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
-               'SVR']
+# VISUALIZING POSITION AVERAGE AND MODEL METRICS
+models_list = [lr_model, pr_model, dt_model, rf_model, svr_model]
 r2_scores = [lr_r2, pr_r2, dt_r2, rf_r2, svr_r2]
 mse_scores = [lr_mse, pr_mse, dt_mse, rf_mse, svr_mse]
 mae_scores = [lr_mae, pr_mae, dt_mae, rf_mae, svr_mae]
 
-plt.figure(figsize=(8, 5))
-plt.bar(model_names, r2_scores)
-plt.ylabel('R² Score')
-plt.title(f"R² Comparison of Regression Models for {position.upper()}'s")
-plt.ylim(0, 1)
-plt.xticks(rotation=15)
-plt.tight_layout()
-plt.show()
+visualization.position_avg(dataset)
 
-plt.figure(figsize=(8, 5))
-plt.bar(model_names, mse_scores)
-plt.ylabel('MSE Score')
-plt.title(f"MSE Comparison of Regression Models for {position.upper()}'s")
-plt.xticks(rotation=15)
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(8, 5))
-plt.bar(model_names, mae_scores)
-plt.ylabel('MAE Score')
-plt.title(f"MAE Comparison of Regression Models for {position.upper()}'s")
-plt.xticks(rotation=15)
-plt.tight_layout()
-plt.show()
+visualization.evaluate_results(r2_scores, mse_scores, mae_scores, position)
 
 # Selecting the most accurate model based on R² values
-optimal_model_index = r2_scores.index(max(r2_scores))
-optimal_model = model_names[optimal_model_index]
-print(f"\nOptimal Model: {optimal_model}; R²: {max(r2_scores)}")
+optimal_model = models.optimal_model_r2(r2_scores)
+print(f"Optimal Model based on R2: {optimal_model}")
 
-# Default feature input
-default_input = pd.DataFrame(X_train, columns=features).mean().to_dict()
+user_input = visualization.get_user_input(position)
+prediction = models.predict_input(user_input, optimal_model, results, features, X_train)
+print(f"Expected PPR points: {prediction}")
