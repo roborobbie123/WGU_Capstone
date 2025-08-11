@@ -277,12 +277,30 @@ print("R² Score:", svr_r2)
 model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
                'SVR']
 r2_scores = [lr_r2, pr_r2, dt_r2, rf_r2, svr_r2]
+mse_scores = [lr_mse, pr_mse, dt_mse, rf_mse, svr_mse]
+mae_scores = [lr_mae, pr_mae, dt_mae, rf_mae, svr_mae]
 
 plt.figure(figsize=(8, 5))
 plt.bar(model_names, r2_scores)
 plt.ylabel('R² Score')
 plt.title(f"R² Comparison of Regression Models for {position.upper()}'s")
 plt.ylim(0, 1)
+plt.xticks(rotation=15)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(8, 5))
+plt.bar(model_names, mse_scores)
+plt.ylabel('MSE Score')
+plt.title(f"MSE Comparison of Regression Models for {position.upper()}'s")
+plt.xticks(rotation=15)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(8, 5))
+plt.bar(model_names, mae_scores)
+plt.ylabel('MAE Score')
+plt.title(f"MAE Comparison of Regression Models for {position.upper()}'s")
 plt.xticks(rotation=15)
 plt.tight_layout()
 plt.show()
