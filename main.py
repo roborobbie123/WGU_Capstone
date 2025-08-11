@@ -62,13 +62,13 @@ r2_scores = [lr_r2, pr_r2, dt_r2, rf_r2, svr_r2]
 mse_scores = [lr_mse, pr_mse, dt_mse, rf_mse, svr_mse]
 mae_scores = [lr_mae, pr_mae, dt_mae, rf_mae, svr_mae]
 
-visualization.position_avg(dataset)
-
-visualization.evaluate_results(r2_scores, mse_scores, mae_scores, position)
+# visualization.position_avg(dataset)
+if visualization.ask('Would you like to compare metrics between models?'):
+    visualization.evaluate_results(r2_scores, mse_scores, mae_scores, position)
 
 # Selecting the most accurate model based on R² values
 optimal_model = models.optimal_model_r2(r2_scores)
-print(f"Optimal Model based on R2: {optimal_model}")
+print(f"Optimal Model based on R²: {optimal_model}")
 
 user_input = visualization.get_user_input(position)
 prediction = models.predict_input(user_input, optimal_model, results, features, X_train)

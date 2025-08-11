@@ -58,13 +58,7 @@ def evaluate_results(r2_scores, mse_scores, mae_scores, position):
     plt.show()
 
 
-def get_default_input(X_train, features):
-
-    return pd.DataFrame(X_train, columns=features).mean().to_dict()
-
-
 def get_user_input(position):
-
     print('--- Enter player statistics from last season ---')
     while True:
         try:
@@ -92,30 +86,12 @@ def get_user_input(position):
     return user_input
 
 
-def predict_input(user_input: dict, features, models_dict, scalers_dict, model_name='Random Forest Regression'):
-
-    # Start from default input
-    default_input = get_default_input(models_dict['X_train'], features)
-    input_data = default_input.copy()
-
-    # Update with user values
-    input_data.update(user_input)
-
-    # Make DataFrame in correct feature order
-    input_df = pd.DataFrame([input_data])[features]
-
-    if model_name == 'Linear Regression':
-        return models_dict['lr'].predict(input_df)[0]
-    elif model_name == 'Polynomial Regression':
-        input_poly = models_dict['pr'].transform(input_df)
-        return models_dict['lr2'].predict(input_poly)[0]
-    elif model_name == 'Decision Tree Regression':
-        return models_dict['dt'].predict(input_df)[0]
-    elif model_name == 'Random Forest Regression':
-        return models_dict['rf'].predict(input_df)[0]
-    elif model_name == 'SVR':
-        input_scaled = scalers_dict['scaler_X'].transform(input_df)
-        pred_scaled = models_dict['svr'].predict(input_scaled)
-        return scalers_dict['scaler_y'].inverse_transform(pred_scaled.reshape(-1, 1))[0][0]
-    else:
-        raise ValueError("Invalid model name")
+def ask(question):
+    while True:
+        answer = input(question + " (y/n): ").strip().lower()
+        if answer in ['y', 'yes']:
+            return True
+        elif answer in ['n', 'no']:
+            return False
+        else:
+            print("Please enter 'y' or 'n'.")

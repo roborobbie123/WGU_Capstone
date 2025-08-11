@@ -47,12 +47,10 @@ def get_performance(y_test, pred):
     mse = mean_squared_error(y_test, pred)
     mae = mean_absolute_error(y_test, pred)
     r2 = r2_score(y_test, pred)
-
     return mse, mae, r2
 
 
 def predict_input(user_input, model_name, results, features, X_train):
-
     default_input = pd.DataFrame(X_train, columns=features).mean().to_dict()
     input_data = default_input.copy()
 
