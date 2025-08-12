@@ -5,6 +5,7 @@ from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 import pandas as pd
+import statistics
 
 
 def train_and_evaluate_models(X_train, X_test, y_train, y_test):
@@ -61,7 +62,7 @@ def predict_input(user_input, model_name, results, features, X_train):
     input_df = pd.DataFrame([input_data])[features]
 
     if model_name == 'Linear Regression':
-        return model_obj.predict(input_df)[0]
+        return model_obj.predict(input_df.values)[0]
     elif model_name == 'Polynomial Regression':
         pr, lr2 = model_obj
         return lr2.predict(pr.transform(input_df))[0]
@@ -71,7 +72,7 @@ def predict_input(user_input, model_name, results, features, X_train):
         return model_obj.predict(input_df)[0]
     elif model_name == 'SVR':
         scaler_X, scaler_y, svr = model_obj
-        pred_scaled = svr.predict(scaler_X.transform(input_df))
+        pred_scaled = svr.predict(scaler_X.transform(input_df.values))
         return scaler_y.inverse_transform(pred_scaled.reshape(-1, 1))[0][0]
     else:
         raise ValueError("Invalid model name")
@@ -82,3 +83,28 @@ def optimal_model_r2(scores):
                    'SVR']
     optimal_model_index = scores.index(max(scores))
     return model_names[optimal_model_index]
+
+
+def optimal_model_mse(scores):
+    model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
+                   'SVR']
+    optimal_model_index = scores.index(min(scores))
+    return model_names[optimal_model_index]
+
+
+def optimal_model_mae(scores):
+    model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
+                   'SVR']
+    optimal_model_index = scores.index(min(scores))
+    return model_names[optimal_model_index]
+
+
+def get_optimal_model(r2_scores, mse_scores, mae_scores):
+    model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
+                   'SVR']
+    r2_index = optimal_model_index = r2_scores.index(max(r2_scores))
+    mse_index = mse_scores.index(min(mse_scores))
+    mae_index = mae_scores.index(min(mae_scores))
+    models = [model_names[r2_index], model_names[mse_index], model_names[mae_index]]
+    optimal_model = statistics.mode(models)
+    return optimal_model

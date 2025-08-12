@@ -3,6 +3,7 @@ import data_processing
 import features
 import models
 import visualization
+import statistics
 
 # DATA PREPROCESSING
 dataset = data_processing.load_and_preprocess_data('archive-2/yearly_player_stats_offense.csv',
@@ -28,7 +29,7 @@ y = data['next_year_points'].values
 # SPLITTING THE DATA
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-# BUILDING THE MODELS
+# BUILDING THE MODELS + METRICS
 results = models.train_and_evaluate_models(X_train, X_test, y_train, y_test)
 
 lr = results['Linear Regression']
@@ -66,10 +67,10 @@ mae_scores = [lr_mae, pr_mae, dt_mae, rf_mae, svr_mae]
 if visualization.ask('Would you like to compare metrics between models?'):
     visualization.evaluate_results(r2_scores, mse_scores, mae_scores, position)
 
-# Selecting the most accurate model based on R² values
-optimal_model = models.optimal_model_r2(r2_scores)
-print(f"Optimal Model based on R²: {optimal_model}")
+# Selecting the most accurate model based on metrics
+optimal_model = models.get_optimal_model(r2_scores, mse_scores, mae_scores)
+print(f"Optimal Model: {optimal_model}")
 
 user_input = visualization.get_user_input(position)
 prediction = models.predict_input(user_input, optimal_model, results, features, X_train)
-print(f"Expected PPR points: {prediction}")
+print(f"Expected PPR points: {round(prediction, 2)}")
