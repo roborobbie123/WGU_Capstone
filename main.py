@@ -3,7 +3,6 @@ import data_processing
 import features
 import models
 import visualization
-import statistics
 
 # DATA PREPROCESSING
 dataset = data_processing.load_and_preprocess_data('archive-2/yearly_player_stats_offense.csv',
@@ -14,16 +13,16 @@ data = data_processing.filter_dataset(dataset, position)
 
 # Getting features by position
 if position == 'rb':
-    features = features.get_features_by_position('rb')
+    features_list = features.get_features_by_position('rb')
 elif position == 'wr':
-    features = features.get_features_by_position('wr')
+    features_list = features.get_features_by_position('wr')
 elif position == 'te':
-    features = features.get_features_by_position('te')
+    features_list = features.get_features_by_position('te')
 else:
     raise ValueError("Position must be rb, wr, or te")
 
 # FEATURES AND DEPENDENT VARIABLE
-X = data[features].values
+X = data[features_list].values
 y = data['next_year_points'].values
 
 # SPLITTING THE DATA
@@ -72,5 +71,5 @@ optimal_model = models.get_optimal_model(r2_scores, mse_scores, mae_scores)
 print(f"Optimal Model: {optimal_model}")
 
 user_input = visualization.get_user_input(position)
-prediction = models.predict_input(user_input, optimal_model, results, features, X_train)
+prediction = models.predict_input(user_input, optimal_model, results, features_list, X_train)
 print(f"Expected PPR points: {round(prediction, 2)}")

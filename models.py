@@ -102,7 +102,7 @@ def optimal_model_mae(scores):
 def get_optimal_model(r2_scores, mse_scores, mae_scores):
     model_names = ['Linear Regression', 'Polynomial Regression', 'Decision Tree Regression', 'Random Forest Regression',
                    'SVR']
-    r2_index = optimal_model_index = r2_scores.index(max(r2_scores))
+    r2_index = r2_scores.index(max(r2_scores))
     mse_index = mse_scores.index(min(mse_scores))
     mae_index = mae_scores.index(min(mae_scores))
     models = [model_names[r2_index], model_names[mse_index], model_names[mae_index]]
