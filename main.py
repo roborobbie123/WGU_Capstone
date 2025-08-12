@@ -5,8 +5,8 @@ import models
 import visualization
 
 # DATA PREPROCESSING
-dataset = data_processing.load_and_preprocess_data('archive-2/yearly_player_stats_offense.csv',
-                                                   'archive-2/yearly_team_stats_offense.csv')
+dataset = data_processing.load_and_preprocess_data('archive/yearly_player_stats_offense.csv',
+                                                   'archive/yearly_team_stats_offense.csv')
 
 position = data_processing.get_position()
 data = data_processing.filter_dataset(dataset, position)
