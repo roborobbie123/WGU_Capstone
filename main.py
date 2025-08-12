@@ -70,6 +70,11 @@ if visualization.ask('Would you like to compare metrics between models?'):
 optimal_model = models.get_optimal_model(r2_scores, mse_scores, mae_scores)
 print(f"Optimal Model: {optimal_model}")
 
+if optimal_model == 'Linear Regression':
+    visualization.plot_predicted_vs_actual(y_test, lr_pred, "Linear Regression")
+elif optimal_model == 'SVR':
+    visualization.plot_predicted_vs_actual(y_test, svr_pred, "SVR")
+
 user_input = visualization.get_user_input(position)
 prediction = models.predict_input(user_input, optimal_model, results, features_list, X_train)
 print(f"Expected PPR points: {round(prediction, 2)}")

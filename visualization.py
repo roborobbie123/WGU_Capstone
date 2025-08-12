@@ -56,6 +56,17 @@ def evaluate_results(r2_scores, mse_scores, mae_scores, position):
     plt.show()
 
 
+def plot_predicted_vs_actual(y_test, y_pred, model_name):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(y_test, y_pred, alpha=0.6, edgecolors='k')
+    plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], 'r--', lw=2)  # 45-degree reference line
+    plt.xlabel('Actual Fantasy Points')
+    plt.ylabel('Predicted Fantasy Points')
+    plt.title(f'Predicted vs Actual Fantasy Points: {model_name}')
+    plt.grid(True)
+    plt.show()
+
+
 def get_user_input(position):
     print('--- Enter player statistics from last season ---')
     while True:
